@@ -57,3 +57,7 @@ class Cards:
     def resetDeck(self):
         self.shuffle()
         self.itr = 0
+
+    def isReshuffleReqd(self):
+        L = len(self.cards)
+        return abs(self.itr - L) < (1/3 * L)

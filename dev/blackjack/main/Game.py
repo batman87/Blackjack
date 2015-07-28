@@ -2,101 +2,157 @@ __author__ = 'devadas'
 
 from Cards import *
 
+
 class Game:
     def __init__(self, num_decks):
         self.cards = Cards(num_decks)
         self.cards.shuffle()
 
-    def reshuffle(self, num_decks):
-        self.cards.shuffle()
-
     def deal(self):
-        player_total = 0
-        dealer_total = 0
+        new_game = True
 
-        # Player turn
-        c = self.cards.getCard()
-        player_total = self.addTotal(player_total, c)
-        print "P: ", c
+        while new_game:
+            if self.cards.isReshuffleReqd():
+                print "Reshuffling cards.."
+                self.cards.shuffle()
 
-        # Dealer turn
-        c = self.cards.getCard()
-        dealer_total = self.addTotal(dealer_total, c)
-        print " D: ", c
+            player_cards = []
+            dealer_cards = []
+            player_bust = False
+            dealer_bust = False
+            player_blackjack = False
+            dealer_blackjack = False
 
-        # Player turn
-        c = self.cards.getCard()
-        player_total = self.addTotal(player_total, c)
-        print "P: ", c
+            # Player turn
+            player_cards.append(self.getCard())
+            self.addTotal(player_cards)
+            print "Player: ", player_cards[0]
 
-        # Dealer Turn
-        c = self.cards.getCard()
-        dealer_total = self.addTotal(dealer_total, c)
-        last_dealer_card = c
-        print " D: X"
+            # Dealer turn
+            dealer_cards.append(self.getCard())
+            self.addTotal(dealer_cards)
+            print "    Dealer: ", dealer_cards[0]
 
-        player_hit = True
-
-        while player_hit:
-            choice = raw_input("Hit/Stay? [h/s]")
-            if choice == 's':
-                player_hit = False
-            elif choice == 'h':
-                c = self.cards.getCard()
-                player_total = self.addTotal(player_total, c)
-                print "P: ", c
-                if(player_total > 21):
-                    print "OOOOOHHHH BUST!!!"
-                    return
+            # Player turn
+            player_cards.append(self.getCard())
+            if self.isBlackjack(player_cards):
+                print "BLACKJACK!!!!"
+                player_blackjack = True
             else:
-                print "Invalid choice"
+                player_total = self.addTotal(player_cards)
+                print "Player: ", player_cards[1], "[", player_total, "]"
 
-        print "\n"
+            # Dealer Turn
+            dealer_cards.append(self.getCard())
+            if player_blackjack:
+                if self.isBlackjack(dealer_cards):
+                    print "Dealer has Blackjack too. Draw."
+                else:
+                    print "Congratulations! You win!"
 
-        print "Dealer turn"
+                new_game = self.checkNewGame()
+                continue
+            self.addTotal(dealer_cards)
+            print "    Dealer: X"
 
-        print last_dealer_card
+            player_hit = True
 
-        dealer_total = self.dealerPlay(dealer_total)
+            while player_hit and not player_bust:
+                choice = raw_input("Hit/Stay? [h/s]")
+                if choice == 's':
+                    player_hit = False
+                elif choice == 'h':
+                    player_cards.append(self.getCard())
+                    player_total = self.addTotal(player_cards)
+                    print "Player: ", player_cards
+                    if player_total > 21:
+                        print "OOOOOHHHH BUST!!!"
+                        player_bust = True
+                else:
+                    print "Invalid choice"
 
-        if dealer_total > 21:
-            print "Dealer BUST!! YOU WIN!!"
-            return
+            if not player_bust:
+                print "Dealer turn"
 
-        print "Player total: ", player_total, " Dealer Total: ", dealer_total
+                print " Dealer: ", dealer_cards[1]
 
-        if dealer_total > player_total:
-            print "Sorry dealer wins!"
-        elif player_total > dealer_total:
-            print "Congratulations! You win!"
-        else:
-            print "Draw"
+                dealer_total = self.dealerPlay(dealer_cards)
 
+                if dealer_total > 21:
+                    print "Dealer BUST!! YOU WIN!!"
+                    dealer_bust = True
 
+                if not dealer_bust:
+                    print "Player total: ", player_total, " Dealer Total: ", dealer_total
+
+                    if dealer_total > player_total:
+                        print "Sorry dealer wins!"
+                    elif player_total > dealer_total:
+                        print "Congratulations! You win!"
+                    else:
+                        print "Draw"
+
+            print "\n"
+            print "*********"
+            new_game = self.checkNewGame()
 
     def hit(self):
         pass
 
-    def dealerPlay(self, t):
-        while t < 17:
-            c = self.cards.getCard()
-            t = self.addTotal(t, c)
-            print c
-        return t
+    def checkNewGame(self):
 
-    def faceCard(self, c):
+        while True:
+            choice = raw_input("New game? [y/n]")
+
+            if choice == 'y' or choice == 'Y':
+                return True
+            elif choice == 'n' or choice == 'N':
+                return False
+                break
+            else:
+                print "Invalid choice."
+
+    def isBlackjack(self, cards):
+        if not self.isFaceCard(cards[0]) or not self.isFaceCard(cards[1]):
+            return False
+
+        if cards[0] == 'A' or cards[1] == 'A':
+            return True
+
+        return False
+
+    def getCard(self):
+        return self.cards.getCard()
+
+    def dealerPlay(self, cards):
+        total = self.addTotal(cards)
+        while total < 17:
+            x = self.getCard()
+            print x
+            cards.append(x)
+            total = self.addTotal(cards)
+
+        return total
+
+    def isFaceCard(self, c):
         return c == 'J' or c == 'Q' or c == 'K' or c == 'A'
 
-    def addTotal(self, t, c):
-        if self.faceCard(c):
-            if c == 'A':
-                t += 11
+    def addTotal(self, cards):
+        total = 0
+        for card in cards:
+            if self.isFaceCard(card):
+                if card == 'A':
+                    if total + 11 > 21:
+                        total += 1
+                    else:
+                        total += 11
+                else:
+                    total += 10
             else:
-                t += 10
-        else:
-            t += int(c)
+                total += int(card)
 
-        return t
+        return total
+
 
 game = Game(1)
 game.deal()
