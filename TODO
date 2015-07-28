@@ -1,4 +1,11 @@
 Aces can be 11 or 1
-Multiple games
 Reshuffle when 1/3 cards are remaining
+Edge case, what happens in game when cards run out?
 Check for Blackjack
+
+More complex rules:
+    Split
+    Double Down
+
+Add Bets
+    Add insurance
