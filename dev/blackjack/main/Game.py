@@ -21,7 +21,6 @@ class Game:
             player_bust = False
             dealer_bust = False
             player_blackjack = False
-            dealer_blackjack = False
 
             # Player turn
             player_cards.append(self.getCard())
@@ -138,21 +137,33 @@ class Game:
         return c == 'J' or c == 'Q' or c == 'K' or c == 'A'
 
     def addTotal(self, cards):
-        total = 0
+        max_total = 0
+        min_total = 0
+
         for card in cards:
             if self.isFaceCard(card):
                 if card == 'A':
-                    if total + 11 > 21:
-                        total += 1
+                    if max_total + 11 > 21:
+                        if min_total + 11 > 21:
+                            max_total = min_total + 1
+                        else:
+                            max_total = min_total + 11
                     else:
-                        total += 11
+                        max_total += 11
+                    min_total += 1
                 else:
-                    total += 10
+                    if max_total + 10 > 21:
+                        max_total = min_total + 10
+                    else:
+                        max_total += 10
+                    min_total += 10
             else:
-                total += int(card)
+                max_total += int(card)
+                min_total += int(card)
 
-        return total
+        return max_total
 
 
-game = Game(1)
-game.deal()
+if __name__ == '__main__':
+    game = Game(1)
+    game.deal()
