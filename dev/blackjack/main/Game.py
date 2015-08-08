@@ -2,56 +2,62 @@ __author__ = 'devadas'
 
 from Cards import *
 
+from Player import *
+from Dealer import *
+
 
 class Game:
     def __init__(self, num_decks):
         self.cards = Cards(num_decks)
         self.cards.shuffle()
+        self.player = Player()
+        self.dealer = Dealer()
 
     def deal(self):
-        new_game = True
+        continue_game = True
 
-        while new_game:
+        while continue_game:
             if self.cards.isReshuffleReqd():
                 print "Reshuffling cards.."
                 self.cards.shuffle()
 
-            player_cards = []
-            dealer_cards = []
+            self.player.clear_cards()
+            self.dealer.clear_cards()
             player_bust = False
             dealer_bust = False
             player_blackjack = False
 
             # Player turn
-            player_cards.append(self.getCard())
-            self.addTotal(player_cards)
-            print "Player: ", player_cards[0]
+            self.player.cards.append(self.getCard())
+            self.add_total(self.player.cards)
+            print "Player: ", self.player.cards[0]
 
             # Dealer turn
-            dealer_cards.append(self.getCard())
-            self.addTotal(dealer_cards)
-            print "    Dealer: ", dealer_cards[0]
+            self.dealer.cards.append(self.getCard())
+            self.add_total(self.dealer.cards)
+            print "    Dealer: ", self.dealer.cards[0]
 
             # Player turn
-            player_cards.append(self.getCard())
-            if self.isBlackjack(player_cards):
+            self.player.cards.append(self.getCard())
+            if self.isBlackjack(self.player.cards):
                 print "BLACKJACK!!!!"
                 player_blackjack = True
             else:
-                player_total = self.addTotal(player_cards)
-                print "Player: ", player_cards[1], "[", player_total, "]"
+                player_total = self.add_total(self.player.cards)
+                print "Player: ", self.player.cards[1], "[", player_total, "]"
 
             # Dealer Turn
-            dealer_cards.append(self.getCard())
+            self.dealer.cards.append(self.getCard())
             if player_blackjack:
-                if self.isBlackjack(dealer_cards):
+                if self.isBlackjack(self.dealer.cards):
                     print "Dealer has Blackjack too. Draw."
                 else:
                     print "Congratulations! You win!"
 
-                new_game = self.checkNewGame()
+                continue_game = self.checkNewGame()
                 continue
-            self.addTotal(dealer_cards)
+
+            self.add_total(self.dealer.cards)
             print "    Dealer: X"
 
             player_hit = True
@@ -61,9 +67,9 @@ class Game:
                 if choice == 's':
                     player_hit = False
                 elif choice == 'h':
-                    player_cards.append(self.getCard())
-                    player_total = self.addTotal(player_cards)
-                    print "Player: ", player_cards
+                    self.player.cards.append(self.getCard())
+                    player_total = self.add_total(self.player.cards)
+                    print "Player: ", self.player.cards
                     if player_total > 21:
                         print "OOOOOHHHH BUST!!!"
                         player_bust = True
@@ -73,9 +79,9 @@ class Game:
             if not player_bust:
                 print "Dealer turn"
 
-                print " Dealer: ", dealer_cards[1]
+                print " Dealer: ", self.dealer.cards[1]
 
-                dealer_total = self.dealerPlay(dealer_cards)
+                dealer_total = self.dealer_play(self.dealer.cards)
 
                 if dealer_total > 21:
                     print "Dealer BUST!! YOU WIN!!"
@@ -93,7 +99,7 @@ class Game:
 
             print "\n"
             print "*********"
-            new_game = self.checkNewGame()
+            continue_game = self.checkNewGame()
 
     def hit(self):
         pass
@@ -112,7 +118,7 @@ class Game:
                 print "Invalid choice."
 
     def isBlackjack(self, cards):
-        if not self.isFaceCard(cards[0]) or not self.isFaceCard(cards[1]):
+        if not self.is_face_card(cards[0]) or not self.is_face_card(cards[1]):
             return False
 
         if cards[0] == 'A' or cards[1] == 'A':
@@ -123,25 +129,26 @@ class Game:
     def getCard(self):
         return self.cards.getCard()
 
-    def dealerPlay(self, cards):
-        total = self.addTotal(cards)
+    def dealer_play(self, cards):
+        total = self.add_total(cards)
         while total < 17:
             x = self.getCard()
             print x
             cards.append(x)
-            total = self.addTotal(cards)
+            total = self.add_total(cards)
 
         return total
 
-    def isFaceCard(self, c):
+    @staticmethod
+    def is_face_card(c):
         return c == 'J' or c == 'Q' or c == 'K' or c == 'A'
 
-    def addTotal(self, cards):
+    def add_total(self, cards):
         max_total = 0
         min_total = 0
 
         for card in cards:
-            if self.isFaceCard(card):
+            if self.is_face_card(card):
                 if card == 'A':
                     if max_total + 11 > 21:
                         if min_total + 11 > 21:
